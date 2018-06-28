@@ -1,4 +1,6 @@
 <?php
+use GuzzleHttp\Client;
+
 
 /**
  * Class VictoryLink
@@ -38,6 +40,14 @@ class VictoryLink
      */
     private $SMSLang;
 
+    
+    /**
+     * object from class Request
+     *
+     * @var Object RequestClass
+     */
+    private $request;
+
     /**
      * VictoryLink constructor.
      * @description return base url when take obj from class Bsms
@@ -49,7 +59,8 @@ class VictoryLink
      * @access public
      */
     public function __construct($user_name, $password, $url)
-    {
+    {       
+        $this->request = new Client();
         $this->wsdlUrl = $url;
         $this->username = $user_name;
         $this->password = $password;
@@ -76,18 +87,20 @@ class VictoryLink
      */
     public function sendSMS($sms_body, $mobile)
     {
-        $client = new SoapClient($this->wsdlUrl, array('cache_wsdl' => WSDL_CACHE_BOTH));
+        
+        $params = [
+            'query' => [
+                'UserName' => $this->username,
+                'Password' => $this->password,
+                'SMSText' => $sms_body,
+                'SMSLang' => $this->SMSLang,
+                'SMSSender' => $this->SMSSender,
+                'SMSReceiver'=>$mobile
+            ]
+        ];
 
-        $result = $client->SendSMS(array(
-            "UserName" => $this->username,
-            "Password" => $this->password,
-            "SMSLang" => $this->SMSLang,
-            "SMSSender" => $this->SMSSender,
-            "SMSText" => $sms_body,
-            "SMSReceiver" => $mobile
-        ));
+        $this->request->request('GET', $this->wsdlUrl,$params)->getBody()->getContents();
 
-        return $result;
     }
 
     /**
